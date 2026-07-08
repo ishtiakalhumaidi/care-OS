@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+:root {
+  --background: #F9FAFB;
+  --foreground: #111827;
+
+  --card: #FFFFFF;
+  --card-foreground: #111827;
+
+  --primary: #4F46E5;
+  --primary-foreground: #F9FAFB;
+
+  --secondary: #FF7F50;
+  --secondary-foreground: #1F1300;
+
+  --muted: #EEF2FF;
+  --muted-foreground: #6B7280;
+
+  --accent: #FFE8DC;
+  --accent-foreground: #111827;
+
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #4F46E5;
+
+  --radius: 0.9rem;
+}
+
+.dark {
+  --background: #0B0D14;
+  --foreground: #F3F4F6;
+
+  --card: #12141F;
+  --card-foreground: #F3F4F6;
+
+  --primary: #818CF8;
+  --primary-foreground: #0B0D14;
+
+  --secondary: #FF9770;
+  --secondary-foreground: #1F1300;
+
+  --muted: #1B1F2E;
+  --muted-foreground: #9CA3AF;
+
+  --accent: #201A33;
+  --accent-foreground: #F3F4F6;
+
+  --border: #232634;
+  --input: #232634;
+  --ring: #818CF8;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-sm: calc(var(--radius) - 8px);
+
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-jakarta);
+  --font-mono: var(--font-plex-mono);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+  }
+}
+
+/* Signature element: check-in badges drifting behind the waitlist card */
+@keyframes float-a {
+  0%, 100% { transform: translate(0, 0) rotate(-3deg); }
+  50% { transform: translate(6px, -14px) rotate(2deg); }
+}
+@keyframes float-b {
+  0%, 100% { transform: translate(0, 0) rotate(4deg); }
+  50% { transform: translate(-8px, 12px) rotate(-2deg); }
+}
+@keyframes float-c {
+  0%, 100% { transform: translate(0, 0) rotate(-1deg); }
+  50% { transform: translate(10px, 8px) rotate(3deg); }
+}
+.animate-float-a { animation: float-a 7s ease-in-out infinite; }
+.animate-float-b { animation: float-b 9s ease-in-out infinite; }
+.animate-float-c { animation: float-c 8s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-a, .animate-float-b, .animate-float-c { animation: none; }
+}
+
+/* Systems grid backdrop — the "engineered" half of the tension */
+.grid-backdrop {
+  background-image:
+    linear-gradient(to right, var(--color-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-border) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 40%, transparent 90%);
+}
