@@ -1,0 +1,32 @@
+model Invoice {
+  id              String        @id @default(uuid())
+  amount          Float
+  dueDate         DateTime
+  status          InvoiceStatus @default(UNPAID)
+  billingPeriodId String        // e.g., "WEEK_32_2026"
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // The child this tuition belongs to
+  childId         String
+  child           Child         @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  // Explicitly link the split transaction payment
+  payments        Payment[]
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  amount        Float
+  transactionId String        @unique // generated locally via uuid v7
+  stripeEventId String?       @unique // captured from checkout hook
+  status        InvoiceStatus @default(UNPAID)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  invoiceId     String
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  // Payer
+  payerId       String        // User ID of the paying parent
+}

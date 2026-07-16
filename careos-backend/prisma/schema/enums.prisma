@@ -1,0 +1,33 @@
+enum Role {
+  SUPER_ADMIN
+  TENANT_OWNER
+  CENTER_ADMIN
+  TEACHER
+  GUARDIAN
+}
+
+enum EnrollmentStatus {
+  APPLIED
+  WAITLISTED
+  ENROLLED
+  GRADUATED
+  ARCHIVED
+}
+
+enum BillingCycle {
+  WEEKLY
+  MONTHLY
+}
+
+enum InvoiceStatus {
+  DRAFT
+  UNPAID
+  PAID
+  VOID
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}

@@ -1,0 +1,12 @@
+model Branch {
+  id               String    @id @default(uuid())
+  name             String
+  address          String
+  timezone         String    @default("UTC")
+  
+  tenantId         String
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  classrooms       Classroom[]
+  children         Child[]
+}

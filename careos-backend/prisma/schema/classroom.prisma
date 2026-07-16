@@ -1,0 +1,12 @@
+model Classroom {
+  id               String    @id @default(uuid())
+  name             String
+  ageGroup         String
+  legalCapacity    Int
+  ratioLimit       Int       // e.g., 4 (meaning 1 Teacher : 4 Children)
+  
+  branchId         String
+  branch           Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  children         Child[]
+}

@@ -1,0 +1,28 @@
+model Tenant {
+  id               String       @id @default(uuid())
+  name             String
+  isActive         Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  // Subscription Billing Link
+  planId           String?
+  plan             SubscriptionPlan? @relation(fields: [planId], references: [id])
+  stripeCustomerId String?      @unique
+
+  branches         Branch[]
+  users            User[]
+  invitations      Invitation[]
+}
+
+model SubscriptionPlan {
+  id          String   @id @default(uuid())
+  name        String   @unique // e.g., "Startup", "Enterprise"
+  price       Float
+  maxStudents Int      // Used for system validation when enrolling kids
+  maxBranches Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenants     Tenant[]
+}
