@@ -34,7 +34,7 @@ Early access / landing page. Core product (auth, dashboards, RBAC) is not yet im
 
 Each app is run independently — see its own README for setup:
 
-- [`careos-client/README.md`](.care-os/README.md)
+- [`careos-client/README.md`](./care-os/README.md)
 - [`careos-backend/README.md`](./careos-server/README.md)
 
 ## License
