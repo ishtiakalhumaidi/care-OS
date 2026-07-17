@@ -31,3 +31,37 @@ enum InviteStatus {
   ACCEPTED
   EXPIRED
 }
+
+enum ShiftStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum DocumentType {
+  IMMUNIZATION_RECORD
+  ENROLLMENT_CONTRACT
+  CONSENT_FIELD_TRIP
+  CONSENT_PHOTO_RELEASE
+  CONSENT_MEDICATION
+  OTHER
+}
+
+enum DocumentStatus {
+  PENDING_SIGNATURE
+  SIGNED
+  EXPIRED
+  REVOKED
+}
+
+enum BroadcastPriority {
+  NORMAL
+  URGENT
+}
+
+enum BroadcastAudience {
+  TENANT_WIDE
+  BRANCH
+  CLASSROOM
+}

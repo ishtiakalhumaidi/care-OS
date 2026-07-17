@@ -1,22 +1,25 @@
 model Child {
-  id               String           @id @default(uuid())
-  firstName        String
-  lastName         String
-  dateOfBirth      DateTime
-  medicalNotes     String?
-  allergies        String?          
-  status           EnrollmentStatus @default(WAITLISTED)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  
-  branchId         String
-  branch           Branch           @relation(fields: [branchId], references: [id])
-  
-  classroomId      String?
-  classroom        Classroom?       @relation(fields: [classroomId], references: [id])
+  id             String           @id @default(uuid())
+  firstName      String
+  lastName       String
+  dateOfBirth    DateTime
+  medicalNotes   String?
+  allergies      String?
+  status         EnrollmentStatus @default(WAITLISTED)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
-  guardians        ChildGuardian[]
-  attendance       Attendance[]
-  timelineEvents   TimelineEvent[]
-  invoices         Invoice[]
+  branchId       String
+  branch         Branch           @relation(fields: [branchId], references: [id])
+
+  classroomId    String?
+  classroom      Classroom?       @relation(fields: [classroomId], references: [id])
+
+  guardians      ChildGuardian[]
+  attendance     Attendance[]
+  timelineEvents TimelineEvent[]
+  invoices       Invoice[]
+  media          Media[]
+  documents      Document[]
+  conversations  Conversation[]
 }

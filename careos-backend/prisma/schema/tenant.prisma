@@ -13,6 +13,7 @@ model Tenant {
   branches         Branch[]
   users            User[]
   invitations      Invitation[]
+  broadcasts       Broadcast[]
 }
 
 model SubscriptionPlan {

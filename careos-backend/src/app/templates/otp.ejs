@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Your CareOS Code</title>
+</head>
+<body style="margin:0; padding:0; background-color:#F9FAFB; font-family: 'Segoe UI', Helvetica, Arial, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F9FAFB; padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px; width:100%; background-color:#FFFFFF; border:1px solid #E5E7EB; border-radius:16px; overflow:hidden;">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding:32px 32px 0 32px;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="width:32px; height:32px; background-color:#4F46E5; border-radius:8px; text-align:center; vertical-align:middle;">
+                    <span style="color:#F9FAFB; font-size:14px; font-weight:700; font-family: Georgia, 'Times New Roman', serif; line-height:32px;">C</span>
+                  </td>
+                  <td style="padding-left:10px;">
+                    <span style="font-size:18px; font-weight:600; color:#111827; font-family: Georgia, 'Times New Roman', serif; letter-spacing:-0.3px;">CareOS</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 4px 0; font-size:12px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:#4F46E5;">
+                Verification Code
+              </p>
+              <h1 style="margin:0 0 16px 0; font-size:22px; line-height:1.3; color:#111827; font-weight:600;">
+                Hi <%= name %>, here's your code
+              </h1>
+              <p style="margin:0 0 28px 0; font-size:14px; line-height:1.6; color:#6B7280;">
+                Use the code below to verify it's really you. This code expires in 2 minutes — if you didn't request this, you can safely ignore this email.
+              </p>
+
+              <!-- OTP block -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <tr>
+                  <td align="center" style="background-color:#EEF2FF; border:1px solid #C7D2FE; border-radius:12px; padding:20px;">
+                    <span style="font-family: 'Courier New', Courier, monospace; font-size:32px; font-weight:700; letter-spacing:10px; color:#4F46E5;">
+                      <%= otp %>
+                    </span>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0; font-size:13px; line-height:1.6; color:#9CA3AF;">
+                For your security, never share this code with anyone — CareOS staff will never ask for it.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 32px; background-color:#F9FAFB; border-top:1px solid #E5E7EB;">
+              <p style="margin:0; font-size:12px; color:#9CA3AF; text-align:center; line-height:1.6;">
+                CareOS · Childcare Management, Engineered for Peace of Mind.<br />
+                This is an automated message, please don't reply directly to this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

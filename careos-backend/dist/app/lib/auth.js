@@ -3,7 +3,8 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { bearer, emailOTP } from "better-auth/plugins";
 import { envVars } from "../config/env.js";
 import { prisma } from "./prisma.js";
-const mockSendEmail = async ({ email, subject, otp }) => {
+import { sendTemplatedEmail } from "../utils/emailSender.js";
+const mockSendEmail = async ({ email, subject, otp, }) => {
     console.log(`[EMAIL MOCK] To: ${email} | Subject: ${subject} | OTP: ${otp}`);
 };
 export const auth = betterAuth({
@@ -23,66 +24,60 @@ export const auth = betterAuth({
             role: {
                 type: "string",
                 required: true,
-                defaultValue: "GUARDIAN"
+                defaultValue: "GUARDIAN",
             },
             isActive: {
                 type: "boolean",
                 required: true,
-                defaultValue: true
+                defaultValue: true,
             },
             needPasswordChange: {
                 type: "boolean",
                 required: true,
-                defaultValue: false
+                defaultValue: false,
             },
             isDeleted: {
                 type: "boolean",
                 required: true,
-                defaultValue: false
+                defaultValue: false,
             },
             deletedAt: {
                 type: "date",
                 required: false,
-                defaultValue: null
+                defaultValue: null,
             },
             tenantId: {
                 type: "string",
                 required: false,
-                defaultValue: null
-            }
-        }
+                defaultValue: null,
+            },
+        },
     },
     plugins: [
         bearer(),
         emailOTP({
             overrideDefaultEmailVerification: true,
             async sendVerificationOTP({ email, otp, type }) {
+                const user = await prisma.user.findUnique({ where: { email } });
+                const name = user ? user.name : "User";
                 if (type === "email-verification") {
-                    const user = await prisma.user.findUnique({ where: { email } });
-                    if (!user)
+                    if (user && user.role === "SUPER_ADMIN")
                         return;
-                    // Skip OTP for Super Admins based on reference logic
-                    if (user.role === "SUPER_ADMIN")
-                        return;
-                    if (!user.emailVerified) {
-                        await mockSendEmail({
-                            email,
-                            subject: "Verify your email for CareOS",
-                            otp,
-                        });
-                    }
+                    await sendTemplatedEmail(email, "Verify your CareOS Email", "otp", {
+                        name,
+                        otp,
+                    });
                 }
                 else if (type === "forget-password") {
-                    await mockSendEmail({
-                        email,
-                        subject: "CareOS Password Reset OTP",
+                    await sendTemplatedEmail(email, "CareOS Password Reset Code", "otp", {
+                        name,
                         otp,
                     });
                 }
             },
-            expiresIn: 2 * 60, // 2 minutes
+            expiresIn: 2 * 60,
             otpLength: 6,
-        })
+        }),
     ],
     session: {
         expiresIn: 60 * 60 * 24 * 7,
@@ -90,11 +85,11 @@ export const auth = betterAuth({
         cookieCache: {
             enabled: true,
             maxAge: 60 * 60 * 24,
-        }
+        },
     },
     trustedOrigins: [envVars.FRONTEND_URL],
     advanced: {
         useSecureCookies: envVars.NODE_ENV === "production",
         generateId: false,
-    }
+    },
 });

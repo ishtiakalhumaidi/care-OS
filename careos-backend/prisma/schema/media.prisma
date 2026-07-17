@@ -1,0 +1,14 @@
+model Media {
+  id          String   @id @default(uuid())
+  url         String
+  caption     String?
+  createdAt   DateTime @default(now())
+
+  childId     String
+  child       Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  uploadedBy  String
+  uploader    User     @relation(fields: [uploadedBy], references: [id])
+
+  @@index([childId, createdAt])
+}

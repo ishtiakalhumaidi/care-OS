@@ -36,3 +36,32 @@ export const InviteStatus = {
     ACCEPTED: 'ACCEPTED',
     EXPIRED: 'EXPIRED'
 };
+export const ShiftStatus = {
+    SCHEDULED: 'SCHEDULED',
+    IN_PROGRESS: 'IN_PROGRESS',
+    COMPLETED: 'COMPLETED',
+    CANCELLED: 'CANCELLED'
+};
+export const DocumentType = {
+    IMMUNIZATION_RECORD: 'IMMUNIZATION_RECORD',
+    ENROLLMENT_CONTRACT: 'ENROLLMENT_CONTRACT',
+    CONSENT_FIELD_TRIP: 'CONSENT_FIELD_TRIP',
+    CONSENT_PHOTO_RELEASE: 'CONSENT_PHOTO_RELEASE',
+    CONSENT_MEDICATION: 'CONSENT_MEDICATION',
+    OTHER: 'OTHER'
+};
+export const DocumentStatus = {
+    PENDING_SIGNATURE: 'PENDING_SIGNATURE',
+    SIGNED: 'SIGNED',
+    EXPIRED: 'EXPIRED',
+    REVOKED: 'REVOKED'
+};
+export const BroadcastPriority = {
+    NORMAL: 'NORMAL',
+    URGENT: 'URGENT'
+};
+export const BroadcastAudience = {
+    TENANT_WIDE: 'TENANT_WIDE',
+    BRANCH: 'BRANCH',
+    CLASSROOM: 'CLASSROOM'
+};

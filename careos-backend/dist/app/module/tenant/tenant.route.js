@@ -1,0 +1,13 @@
+import { Router } from "express";
+import { validateRequest } from "../../middleware/validateRequest.js";
+import { TenantController } from "./tenant.controller.js";
+import { TenantValidation } from "./tenant.validation.js";
+import { checkAuth } from "../../middleware/checkAuth.js";
+import { Role } from "../../../generated/prisma/client.js";
+const router = Router();
+router.post("/", checkAuth(Role.SUPER_ADMIN), validateRequest(TenantValidation.createTenantZodSchema), TenantController.createTenant);
+router.get("/", checkAuth(Role.SUPER_ADMIN), TenantController.getAllTenants);
+router.get("/:id", checkAuth(Role.SUPER_ADMIN, Role.TENANT_OWNER), TenantController.getTenantById);
+router.patch("/:id", checkAuth(Role.SUPER_ADMIN, Role.TENANT_OWNER), validateRequest(TenantValidation.updateTenantZodSchema), TenantController.updateTenant);
+router.delete("/:id", checkAuth(Role.SUPER_ADMIN), TenantController.deleteTenant);
+export const TenantRoutes = router;

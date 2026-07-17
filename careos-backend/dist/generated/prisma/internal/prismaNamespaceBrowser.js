@@ -42,12 +42,19 @@ export const ModelName = {
     Invoice: 'Invoice',
     Payment: 'Payment',
     Branch: 'Branch',
+    Broadcast: 'Broadcast',
     Child: 'Child',
     Classroom: 'Classroom',
+    Document: 'Document',
     ChildGuardian: 'ChildGuardian',
     Invitation: 'Invitation',
+    Media: 'Media',
+    Conversation: 'Conversation',
+    Message: 'Message',
     Attendance: 'Attendance',
     TimelineEvent: 'TimelineEvent',
+    Shift: 'Shift',
+    Timesheet: 'Timesheet',
     Tenant: 'Tenant',
     SubscriptionPlan: 'SubscriptionPlan',
     User: 'User',
@@ -92,6 +99,17 @@ export const BranchScalarFieldEnum = {
     timezone: 'timezone',
     tenantId: 'tenantId'
 };
+export const BroadcastScalarFieldEnum = {
+    id: 'id',
+    title: 'title',
+    body: 'body',
+    priority: 'priority',
+    audience: 'audience',
+    createdAt: 'createdAt',
+    tenantId: 'tenantId',
+    branchId: 'branchId',
+    createdBy: 'createdBy'
+};
 export const ChildScalarFieldEnum = {
     id: 'id',
     firstName: 'firstName',
@@ -112,6 +130,19 @@ export const ClassroomScalarFieldEnum = {
     legalCapacity: 'legalCapacity',
     ratioLimit: 'ratioLimit',
     branchId: 'branchId'
+};
+export const DocumentScalarFieldEnum = {
+    id: 'id',
+    type: 'type',
+    status: 'status',
+    fileUrl: 'fileUrl',
+    version: 'version',
+    signedAt: 'signedAt',
+    expiresAt: 'expiresAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    childId: 'childId',
+    signedById: 'signedById'
 };
 export const ChildGuardianScalarFieldEnum = {
     id: 'id',
@@ -134,7 +165,30 @@ export const InvitationScalarFieldEnum = {
     updatedAt: 'updatedAt',
     tenantId: 'tenantId',
     branchId: 'branchId',
-    classroomId: 'classroomId'
+    classroomId: 'classroomId',
+    acceptedUserId: 'acceptedUserId'
+};
+export const MediaScalarFieldEnum = {
+    id: 'id',
+    url: 'url',
+    caption: 'caption',
+    createdAt: 'createdAt',
+    childId: 'childId',
+    uploadedBy: 'uploadedBy'
+};
+export const ConversationScalarFieldEnum = {
+    id: 'id',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    childId: 'childId'
+};
+export const MessageScalarFieldEnum = {
+    id: 'id',
+    content: 'content',
+    createdAt: 'createdAt',
+    readAt: 'readAt',
+    conversationId: 'conversationId',
+    senderId: 'senderId'
 };
 export const AttendanceScalarFieldEnum = {
     id: 'id',
@@ -152,6 +206,26 @@ export const TimelineEventScalarFieldEnum = {
     description: 'description',
     loggedBy: 'loggedBy',
     loggedAt: 'loggedAt'
+};
+export const ShiftScalarFieldEnum = {
+    id: 'id',
+    startTime: 'startTime',
+    endTime: 'endTime',
+    status: 'status',
+    isSubstitute: 'isSubstitute',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    userId: 'userId',
+    classroomId: 'classroomId'
+};
+export const TimesheetScalarFieldEnum = {
+    id: 'id',
+    clockInTime: 'clockInTime',
+    clockOutTime: 'clockOutTime',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    userId: 'userId',
+    shiftId: 'shiftId'
 };
 export const TenantScalarFieldEnum = {
     id: 'id',

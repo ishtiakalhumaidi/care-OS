@@ -1,0 +1,36 @@
+model Shift {
+  id           String      @id @default(uuid())
+  startTime    DateTime
+  endTime      DateTime
+  status       ShiftStatus @default(SCHEDULED)
+  isSubstitute Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  classroomId  String
+  classroom    Classroom   @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+
+  timesheet    Timesheet?
+
+  @@index([userId, startTime])
+  @@index([classroomId, startTime])
+}
+
+model Timesheet {
+  id            String    @id @default(uuid())
+  clockInTime   DateTime
+  clockOutTime  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  shiftId       String?   @unique
+  shift         Shift?    @relation(fields: [shiftId], references: [id])
+
+  @@index([userId, clockInTime])
+}

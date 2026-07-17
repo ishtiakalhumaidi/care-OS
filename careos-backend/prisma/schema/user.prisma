@@ -12,15 +12,25 @@ model User {
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
 
-  tenantId           String?   
+  tenantId           String?
   tenant             Tenant?    @relation(fields: [tenantId], references: [id])
 
-  // BetterAuth standard tables
   sessions           Session[]
   accounts           Account[]
 
-  // Child-care relations
   guardianProfile    ChildGuardian[]
+
+  acceptedInvitation Invitation?
+
+  shifts             Shift[]
+  timesheets         Timesheet[]
+
+  uploadedMedia      Media[]
+  signedDocuments    Document[]
+
+  sentMessages       Message[]
+
+  createdBroadcasts  Broadcast[]
 }
 
 model Session {
