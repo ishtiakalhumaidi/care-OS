@@ -25,9 +25,9 @@ Early access / landing page. Core product (auth, dashboards, RBAC) is not yet im
 ## Roadmap
 
 - [x] Phase 1 — High-fidelity landing page and waitlist capture (`careos-client`)
-- [ ] Phase 2 — Relational schema (Prisma ERD): center, classroom, teacher, child, guardian
-- [ ] Phase 3 — Modular backend (Node/Express, route → controller → service) with Zod validation
-- [ ] Phase 4 — RBAC + auth (access/refresh tokens)
+- [x] Phase 2 — Relational schema (Prisma ERD): center, classroom, teacher, child, guardian
+- [x] Phase 3 — Modular backend (Node/Express, route → controller → service) with Zod validation
+- [x] Phase 4 — RBAC + auth (access/refresh tokens)
 - [ ] Phase 5 — Core features: kiosk check-in, live ratio balancer, moments timeline, billing
 
 ## Getting Started
