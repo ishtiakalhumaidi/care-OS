@@ -1,21 +1,35 @@
 import { NextFunction, Request, Response } from "express";
-import type { ZodObject } from "zod";
+import { ZodError, type ZodObject } from "zod";
+import status from "http-status";
+import AppError from "../errorHelpers/AppError.js";
 
 export const validateRequest = (schema: ZodObject) => {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            // If dealing with FormData (like file uploads), parse it first
-            if (req.body.data && typeof req.body.data === 'string') {
-                req.body = JSON.parse(req.body.data);
-            }
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (typeof req.body.data === "string") {
+        req.body = JSON.parse(req.body.data);
+      }
 
-            // Parse and sanitize the incoming request payload
-            const parsedResult = await schema.parseAsync(req.body);
-            req.body = parsedResult;
-            
-            next();
-        } catch (error) {
-            next(error);
-        }
-    };
+      req.body = await schema.parseAsync(req.body);
+
+      next();
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        return next(
+          new AppError(status.BAD_REQUEST, "Invalid JSON in request body"),
+        );
+      }
+
+      if (error instanceof ZodError) {
+        return next(
+          new AppError(
+            status.BAD_REQUEST,
+            error.issues.map((issue) => issue.message).join(", "),
+          ),
+        );
+      }
+
+      next(error);
+    }
+  };
 };

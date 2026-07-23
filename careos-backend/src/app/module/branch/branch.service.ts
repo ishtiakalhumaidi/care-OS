@@ -10,7 +10,7 @@ import {
   ICreateBranchPayload,
   IUpdateBranchPayload,
 } from "./branch.interface.js";
-import type { Branch, Prisma } from "../../../generated/prisma/client.js";
+import type { Prisma, Branch } from "../../../generated/prisma/client.js";
 import type { IQuery } from "../../interfaces/query.interface.js";
 import { QueryBuilder } from "../../builder/QueryBuilder.js";
 
@@ -23,7 +23,6 @@ const createBranch = async (payload: ICreateBranchPayload) => {
     throw new AppError(status.NOT_FOUND, "Tenant not found");
   }
 
-  // Enforce the subscription's branch cap so an owner can't silently outgrow their plan
   if (isTenantExist.planId) {
     const plan = await prisma.subscriptionPlan.findUnique({
       where: { id: isTenantExist.planId },
@@ -51,7 +50,9 @@ const createBranch = async (payload: ICreateBranchPayload) => {
 };
 
 const getAllBranches = async (query: IQuery, tenantId?: string) => {
-  const scopedQuery = tenantId ? { ...query, tenantId } : query;
+  const scopedQuery = tenantId
+    ? { ...query, tenantId, isActive: true }
+    : { ...query, isActive: true };
 
   const queryBuilder = new QueryBuilder<
     Branch,
@@ -80,7 +81,7 @@ const getBranchById = async (id: string, tenantId?: string) => {
     include: branchIncludeConfig as Prisma.BranchInclude,
   });
 
-  if (!branch) {
+  if (!branch || !branch.isActive) {
     throw new AppError(status.NOT_FOUND, "Branch not found");
   }
 
@@ -101,7 +102,7 @@ const updateBranch = async (
 ) => {
   const isBranchExist = await prisma.branch.findUnique({ where: { id } });
 
-  if (!isBranchExist) {
+  if (!isBranchExist || !isBranchExist.isActive) {
     throw new AppError(status.NOT_FOUND, "Branch not found");
   }
 
@@ -123,7 +124,7 @@ const updateBranch = async (
 const deleteBranch = async (id: string, tenantId?: string) => {
   const isBranchExist = await prisma.branch.findUnique({ where: { id } });
 
-  if (!isBranchExist) {
+  if (!isBranchExist || !isBranchExist.isActive) {
     throw new AppError(status.NOT_FOUND, "Branch not found");
   }
 
@@ -134,9 +135,12 @@ const deleteBranch = async (id: string, tenantId?: string) => {
     );
   }
 
-  await prisma.branch.delete({ where: { id } });
+  await prisma.branch.update({
+    where: { id },
+    data: { isActive: false },
+  });
 
-  return { message: "Branch deleted successfully" };
+  return { message: "Branch deactivated successfully" };
 };
 
 export const BranchService = {

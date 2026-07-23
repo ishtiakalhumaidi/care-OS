@@ -11,6 +11,7 @@ export const checkAuth = (...requiredRoles) => {
                 throw new AppError(status.UNAUTHORIZED, "You are not authorized! Token is missing.");
             }
             const token = authHeader.split(" ")[1];
+            console.log("Token received in checkAuth middleware:", token);
             let decoded;
             try {
                 decoded = jwt.verify(token, envVars.ACCESS_TOKEN_SECRET);

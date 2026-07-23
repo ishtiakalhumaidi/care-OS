@@ -18,6 +18,7 @@ export const checkAuth = (...requiredRoles: Role[]) => {
       }
 
       const token = authHeader.split(" ")[1];
+      console.log("Token received in checkAuth middleware:", token);
 
       let decoded: JwtPayload;
       try {

@@ -1,0 +1,291 @@
+@startuml CareOS_Domain_Class_Diagram
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor White
+  ArrowColor #333333
+  BorderColor #555555
+}
+hide empty members
+
+' =========================================================
+' TENANCY
+' =========================================================
+
+class Tenant {
+  +id : String
+  +name : String
+  +isActive : Boolean
+  +suspendedAt : DateTime
+  +suspensionReason : String
+  +stripeCustomerId : String
+  --
+  +activate()
+  +suspend(reason)
+  +updatePlan(planId)
+}
+
+class SubscriptionPlan {
+  +id : String
+  +name : String
+  +price : Float
+  +maxStudents : Int
+  +maxBranches : Int
+  --
+  +isWithinLimits(usage)
+}
+
+class Branch {
+  +id : String
+  +name : String
+  +address : String
+  +timezone : String
+  +isActive : Boolean
+  --
+  +activate()
+  +deactivate()
+}
+
+class Classroom {
+  +id : String
+  +name : String
+  +ageGroup : String
+  +legalCapacity : Int
+  +ratioLimit : Int
+  --
+  +checkRatioCompliance()
+}
+
+' =========================================================
+' CHILD / FAMILY
+' =========================================================
+
+class Child {
+  +id : String
+  +firstName : String
+  +lastName : String
+  +dateOfBirth : DateTime
+  +status : EnrollmentStatus
+  +medicalNotes : String
+  +allergies : String
+  --
+  +enroll()
+  +transferClassroom(classroom)
+  +archive()
+}
+
+class ChildGuardian {
+  +id : String
+  +relationship : String
+  +isPrimary : Boolean
+  +canPickup : Boolean
+  +billingPreference : BillingCycle
+  +splitPercentage : Int
+  --
+  +grantPickupPermission()
+  +revokePickupPermission()
+  +updateBillingSplit(percentage)
+}
+
+class Attendance {
+  +id : String
+  +checkInTime : DateTime
+  +checkOutTime : DateTime
+  +checkedInBy : String
+  +checkedOutBy : String
+  +syncedAt : DateTime
+  --
+  +checkIn(user)
+  +checkOut(user)
+}
+
+class TimelineEvent {
+  +id : String
+  +eventType : String
+  +description : String
+  +loggedBy : String
+  +loggedAt : DateTime
+  --
+  +logEvent()
+}
+
+class Document {
+  +id : String
+  +type : DocumentType
+  +status : DocumentStatus
+  +fileUrl : String
+  +version : Int
+  +signedAt : DateTime
+  +expiresAt : DateTime
+  --
+  +sign(user)
+  +revoke()
+  +renew()
+}
+
+class Media {
+  +id : String
+  +url : String
+  +caption : String
+  --
+  +upload()
+  +delete()
+}
+
+class Conversation {
+  +id : String
+  --
+  +archive()
+}
+
+class Message {
+  +id : String
+  +content : String
+  +readAt : DateTime
+  --
+  +send()
+  +markRead()
+}
+
+' =========================================================
+' BILLING
+' =========================================================
+
+class Invoice {
+  +id : String
+  +amount : Float
+  +dueDate : DateTime
+  +status : InvoiceStatus
+  +billingPeriodId : String
+  --
+  +markPaid()
+  +void()
+}
+
+class Payment {
+  +id : String
+  +amount : Float
+  +transactionId : String
+  +stripeEventId : String
+  +status : InvoiceStatus
+  +payerId : String
+  --
+  +process()
+  +refund()
+}
+
+' =========================================================
+' COMMS / STAFFING
+' =========================================================
+
+class Broadcast {
+  +id : String
+  +title : String
+  +body : String
+  +priority : BroadcastPriority
+  +audience : BroadcastAudience
+  --
+  +publish()
+}
+
+class Invitation {
+  +id : String
+  +email : String
+  +role : Role
+  +token : String
+  +status : InviteStatus
+  +expiresAt : DateTime
+  --
+  +send()
+  +accept()
+  +expire()
+  +resend()
+}
+
+class Shift {
+  +id : String
+  +startTime : DateTime
+  +endTime : DateTime
+  +status : ShiftStatus
+  +isSubstitute : Boolean
+  --
+  +schedule()
+  +start()
+  +complete()
+  +cancel()
+}
+
+class Timesheet {
+  +id : String
+  +clockInTime : DateTime
+  +clockOutTime : DateTime
+  --
+  +clockIn()
+  +clockOut()
+}
+
+' =========================================================
+' IDENTITY
+' =========================================================
+
+class User {
+  +id : String
+  +name : String
+  +email : String
+  +emailVerified : Boolean
+  +role : Role
+  +isActive : Boolean
+  +isDeleted : Boolean
+  +needPasswordChange : Boolean
+  --
+  +changePassword()
+  +deactivate()
+  +restore()
+}
+
+' =========================================================
+' COMPOSITION — required FK / onDelete Cascade
+' (part cannot exist without the whole)
+' =========================================================
+
+Tenant       "1" *-- "*" Branch
+Branch       "1" *-- "*" Classroom
+Branch       "1" *-- "*" Child
+Child        "1" *-- "*" ChildGuardian
+Child        "1" *-- "*" Attendance
+Child        "1" *-- "*" TimelineEvent
+Child        "1" *-- "*" Document
+Child        "1" *-- "*" Media
+Child        "1" *-- "*" Invoice
+Child        "1" *-- "*" Conversation
+Conversation "1" *-- "*" Message
+Invoice      "1" *-- "*" Payment
+Tenant       "1" *-- "*" Invitation
+Tenant       "1" *-- "*" Broadcast
+Classroom    "1" *-- "*" Shift
+
+' =========================================================
+' AGGREGATION — optional FK
+' (part can exist independently of the whole)
+' =========================================================
+
+Classroom "0..1" o-- "*" Child
+Branch    "0..1" o-- "*" Broadcast
+Tenant    "0..1" o-- "*" SubscriptionPlan
+Shift     "0..1" o-- "0..1" Timesheet
+
+
+User "1" --> "*" ChildGuardian : guardian
+User "0..1" --> "*" Document : signedBy
+User "1" --> "*" Media : uploader
+User "1" --> "*" Message : sender
+User "1" --> "*" Broadcast : creator
+User "1" --> "*" Shift : assignee
+User "1" --> "*" Timesheet : owner
+User "0..1" --> "0..1" Invitation : acceptedUser
+User "0..1" --> "*" Tenant
+User "0..1" --> "*" Branch
+User "0..1" --> "*" Classroom
+
+
+
+@enduml

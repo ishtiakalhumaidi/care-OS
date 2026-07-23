@@ -7,5 +7,12 @@ export const tenantFilterableFields = ["isActive", "planId"];
 export const tenantIncludeConfig: Prisma.TenantInclude = {
   plan: true,
   branches: true,
-  users: true,
+  _count: {
+    select: {
+      branches: true,
+      users: true,
+      invitations: true,
+      children: { where: { status: "ENROLLED" } },
+    },
+  },
 };

@@ -2,16 +2,7 @@ import status from "http-status";
 import { catchAsync } from "../../shared/catchAsync.js";
 import { sendResponse } from "../../shared/sendResponse.js";
 import { TenantService } from "./tenant.service.js";
-const createTenant = catchAsync(async (req, res) => {
-    const payload = req.body;
-    const result = await TenantService.createTenant(payload);
-    sendResponse(res, {
-        httpStatusCode: status.CREATED,
-        success: true,
-        message: "Tenant created successfully",
-        data: result,
-    });
-});
+import AppError from "../../errorHelpers/AppError.js";
 const getAllTenants = catchAsync(async (req, res) => {
     const query = req.query;
     const result = await TenantService.getAllTenants(query);
@@ -25,18 +16,23 @@ const getAllTenants = catchAsync(async (req, res) => {
 });
 const getTenantById = catchAsync(async (req, res) => {
     const { id } = req.params;
+    if (req.user.role === "TENANT_OWNER" && req.user.tenantId !== id) {
+        throw new AppError(status.FORBIDDEN, "You do not have access to this tenant");
+    }
     const result = await TenantService.getTenantById(id);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
-        message: "Tenant fetched successfully",
+        message: "Tenant retrieved successfully",
         data: result,
     });
 });
 const updateTenant = catchAsync(async (req, res) => {
     const { id } = req.params;
-    const payload = req.body;
-    const result = await TenantService.updateTenant(id, payload);
+    if (req.user.role === "TENANT_OWNER" && req.user.tenantId !== id) {
+        throw new AppError(status.FORBIDDEN, "You do not have access to this tenant");
+    }
+    const result = await TenantService.updateTenant(id, req.body);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
@@ -44,20 +40,41 @@ const updateTenant = catchAsync(async (req, res) => {
         data: result,
     });
 });
-const deleteTenant = catchAsync(async (req, res) => {
+const suspendTenant = catchAsync(async (req, res) => {
     const { id } = req.params;
-    const result = await TenantService.deleteTenant(id);
+    const result = await TenantService.suspendTenant(id, req.body);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
-        message: "Tenant deleted successfully",
+        message: "Tenant suspended successfully",
+        data: result,
+    });
+});
+const activateTenant = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const result = await TenantService.activateTenant(id);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Tenant activated successfully",
+        data: result,
+    });
+});
+const getTenantAnalytics = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const result = await TenantService.getTenantAnalytics(id);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Tenant analytics fetched successfully",
         data: result,
     });
 });
 export const TenantController = {
-    createTenant,
     getAllTenants,
     getTenantById,
     updateTenant,
-    deleteTenant,
+    suspendTenant,
+    activateTenant,
+    getTenantAnalytics,
 };

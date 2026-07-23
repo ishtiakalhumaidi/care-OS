@@ -2,7 +2,9 @@ import status from "http-status";
 import AppError from "../../errorHelpers/AppError.js";
 import { prisma } from "../../lib/prisma.js";
 import { auth } from "../../lib/auth.js";
+import { TokenUtils } from "../../utils/token.js";
 import {
+  ILoginPayload,
   IChangePasswordPayload,
   IRegisterTenantOwnerPayload,
   type IAcceptInvitePayload,
@@ -10,65 +12,73 @@ import {
   type IInviteUserPayload,
   type IResetPasswordPayload,
 } from "./auth.interface.js";
-import { ENUM_USER_ROLE } from "./auth.constant.js";
 import { envVars } from "../../config/env.js";
 import { randomBytes } from "crypto";
 import { sendTemplatedEmail } from "../../utils/emailSender.js";
+import type { Prisma, Invitation } from "../../../generated/prisma/client.js";
+import type { IQuery } from "../../interfaces/query.interface.js";
+import { QueryBuilder } from "../../builder/QueryBuilder.js";
+import {
+  ENUM_USER_ROLE,
+  invitationFilterableFields,
+  invitationSearchableFields,
+} from "./auth.constant.js";
+import { generateUniqueTenantSlug } from "../../utils/generateUniqueTenantSlug.js";
+
+const getDefaultFreePlanId = async () => {
+  const freePlan = await prisma.subscriptionPlan.findFirst({
+    where: { name: "Free" },
+  });
+  return freePlan?.id ?? null;
+};
 
 const registerTenantOwner = async (payload: IRegisterTenantOwnerPayload) => {
-  // 1. Check if the tenant exists
-  const isTenantExist = await prisma.tenant.findUnique({
-    where: { id: payload.tenantId },
-  });
-
-  if (!isTenantExist) {
-    throw new AppError(status.NOT_FOUND, "Tenant not found");
-  }
-
-  // 2. Check if user already exists
   const isUserExist = await prisma.user.findUnique({
     where: { email: payload.email },
   });
 
   if (isUserExist) {
-    throw new AppError(status.CONFLICT, "User with this email already exists");
+    throw new AppError(
+      status.CONFLICT,
+      "An account with this email already exists",
+    );
   }
 
-  // 3. Create the user using BetterAuth's admin API to ensure passwords and accounts are synced.
-  // We assign a default secure password that they must change on first login.
-  const tempPassword = Math.random().toString(36).slice(-10) + "A1!";
+  const slug = await generateUniqueTenantSlug(payload.tenantName);
 
-  // Programmatically create the user in BetterAuth (this populates the User and Account tables)
-  const newAuthUser = await auth.api.signUpEmail({
-    body: {
-      email: payload.email,
-      password: tempPassword,
-      name: payload.name,
+  const tenant = await prisma.tenant.create({
+    data: {
+      name: payload.tenantName,
+      slug,
+      planId: payload.planId ?? (await getDefaultFreePlanId()),
     },
   });
 
-  // 4. Update the created user with our custom CareOS schema fields
-  const updatedUser = await prisma.user.update({
+  try {
+    await auth.api.signUpEmail({
+      body: {
+        email: payload.email,
+        password: payload.password,
+        name: payload.name,
+      },
+    });
+  } catch (error) {
+    await prisma.tenant.delete({ where: { id: tenant.id } });
+    throw new AppError(
+      status.BAD_REQUEST,
+      "Failed to create your account. Please try again.",
+    );
+  }
+
+  const user = await prisma.user.update({
     where: { email: payload.email },
     data: {
-      role: ENUM_USER_ROLE.TENANT_OWNER as any, // Cast to Prisma enum
-      tenantId: payload.tenantId,
-      needPasswordChange: true, // Force them to change the temp password
+      role: ENUM_USER_ROLE.TENANT_OWNER as any,
+      tenantId: tenant.id,
     },
   });
 
-  await sendTemplatedEmail(
-    payload.email,
-    "Welcome to CareOS — Your Login Details",
-    "temp-password",
-    {
-      name: payload.name,
-      email: payload.email,
-      tempPassword,
-    },
-  );
-
-  return { user: updatedUser };
+  return { user, tenant };
 };
 
 const resolvePasswordChange = async (
@@ -83,8 +93,6 @@ const resolvePasswordChange = async (
     throw new AppError(status.NOT_FOUND, "User not found");
   }
 
-  // Use BetterAuth's programmatic API to change the password
-  // BetterAuth automatically verifies the old password and hashes the new one
   await auth.api.changePassword({
     body: {
       newPassword: payload.newPassword,
@@ -95,7 +103,6 @@ const resolvePasswordChange = async (
     }),
   });
 
-  // Update the custom flag in our database
   await prisma.user.update({
     where: { id: userId },
     data: {
@@ -126,7 +133,31 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
   return response;
 };
 
-const inviteUser = async (payload: IInviteUserPayload) => {
+const inviteUser = async (
+  payload: IInviteUserPayload,
+  inviterRole: string,
+  inviterBranchId?: string,
+) => {
+  if (
+    inviterRole === ENUM_USER_ROLE.CENTER_ADMIN &&
+    payload.role === ENUM_USER_ROLE.CENTER_ADMIN
+  ) {
+    throw new AppError(
+      status.FORBIDDEN,
+      "Center Admins cannot invite other Center Admins",
+    );
+  }
+
+  if (
+    inviterRole === ENUM_USER_ROLE.CENTER_ADMIN &&
+    payload.branchId !== inviterBranchId
+  ) {
+    throw new AppError(
+      status.FORBIDDEN,
+      "You can only invite people into your own branch",
+    );
+  }
+
   const isTenantExist = await prisma.tenant.findUnique({
     where: { id: payload.tenantId },
   });
@@ -169,11 +200,22 @@ const inviteUser = async (payload: IInviteUserPayload) => {
       tenantId: payload.tenantId,
       branchId: payload.branchId,
       classroomId: payload.classroomId,
+      childId: payload.childId,
+      relationship: payload.relationship,
     },
   });
 
   const inviteLink = `${envVars.FRONTEND_URL}/accept-invite?token=${token}`;
-  console.log(`[INVITE MOCK] To: ${payload.email} | Link: ${inviteLink}`);
+  await sendTemplatedEmail({
+    to: payload.email,
+    subject: `You've been invited to join ${isTenantExist.name} on CareOS`,
+    templateName: "invite",
+    templateData: {
+      tenantName: isTenantExist.name,
+      role: payload.role,
+      inviteLink,
+    },
+  });
 
   return invitation;
 };
@@ -188,7 +230,10 @@ const acceptInvite = async (payload: IAcceptInvitePayload) => {
   }
 
   if (invitation.status === "ACCEPTED") {
-    throw new AppError(status.CONFLICT, "This invitation has already been used");
+    throw new AppError(
+      status.CONFLICT,
+      "This invitation has already been used",
+    );
   }
 
   if (invitation.status === "EXPIRED" || invitation.expiresAt < new Date()) {
@@ -209,7 +254,10 @@ const acceptInvite = async (payload: IAcceptInvitePayload) => {
   });
 
   if (isUserExist) {
-    throw new AppError(status.CONFLICT, "An account with this email already exists");
+    throw new AppError(
+      status.CONFLICT,
+      "An account with this email already exists",
+    );
   }
   await auth.api.signUpEmail({
     body: {
@@ -222,10 +270,22 @@ const acceptInvite = async (payload: IAcceptInvitePayload) => {
     where: { email: invitation.email },
     data: {
       role: invitation.role,
+      branchId: invitation.branchId,
+      classroomId: invitation.classroomId,
       tenantId: invitation.tenantId,
       emailVerified: true,
     },
   });
+
+  if (invitation.role === ENUM_USER_ROLE.GUARDIAN && invitation.childId) {
+    await prisma.childGuardian.create({
+      data: {
+        childId: invitation.childId,
+        userId: updatedUser.id,
+        relationship: invitation.relationship || "Guardian",
+      },
+    });
+  }
 
   const acceptedInvitation = await prisma.invitation.update({
     where: { id: invitation.id },
@@ -237,11 +297,131 @@ const acceptInvite = async (payload: IAcceptInvitePayload) => {
 
   return { user: updatedUser, invitation: acceptedInvitation };
 };
+
+const loginUser = async (payload: ILoginPayload) => {
+  try {
+    await auth.api.signInEmail({
+      body: {
+        email: payload.email,
+        password: payload.password,
+      },
+    });
+  } catch (error) {
+    throw new AppError(status.UNAUTHORIZED, "Invalid email or password");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: payload.email },
+  });
+
+  if (!user) {
+    throw new AppError(status.NOT_FOUND, "User not found");
+  }
+
+  if (user.isDeleted) {
+    throw new AppError(status.FORBIDDEN, "This account has been deleted");
+  }
+
+  if (!user.isActive) {
+    throw new AppError(status.FORBIDDEN, "This account has been suspended");
+  }
+  if (user.tenantId) {
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: user.tenantId },
+    });
+
+    if (tenant && !tenant.isActive) {
+      if (user.role === ENUM_USER_ROLE.TENANT_OWNER) {
+        throw new AppError(
+          status.FORBIDDEN,
+          `Your CareOS subscription has been suspended${
+            tenant.suspensionReason ? `: ${tenant.suspensionReason}` : ""
+          }. Please contact CareOS support for assistance.`,
+        );
+      }
+      throw new AppError(
+        status.FORBIDDEN,
+        "This center's account is currently inactive. Please contact your center admin or owner.",
+      );
+    }
+  }
+  const tokens = TokenUtils.generateAuthTokens(user);
+
+  return { user, ...tokens };
+};
+
+const refreshAccessToken = async (refreshToken: string) => {
+  let decoded;
+  try {
+    decoded = TokenUtils.verifyRefreshToken(refreshToken);
+  } catch {
+    throw new AppError(status.UNAUTHORIZED, "Invalid or expired refresh token");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.userId },
+  });
+
+  if (!user || user.isDeleted || !user.isActive) {
+    throw new AppError(status.UNAUTHORIZED, "Invalid session");
+  }
+
+  return TokenUtils.generateAuthTokens(user);
+};
+const getAllInvitations = async (
+  query: IQuery,
+  tenantId: string,
+  branchId?: string,
+) => {
+  const scopedQuery: IQuery = branchId
+    ? { ...query, tenantId, branchId }
+    : { ...query, tenantId };
+
+  const queryBuilder = new QueryBuilder<
+    Invitation,
+    Prisma.InvitationWhereInput,
+    Prisma.InvitationInclude
+  >(prisma.invitation, scopedQuery, {
+    searchableFields: invitationSearchableFields,
+    filterableFields: invitationFilterableFields,
+  });
+
+  const result = await queryBuilder
+    .search()
+    .filter()
+    .paginate()
+    .sort()
+    .fields()
+    .execute();
+  return result;
+};
+
+const revokeInvitation = async (id: string, tenantId: string) => {
+  const invitation = await prisma.invitation.findUnique({ where: { id } });
+
+  if (!invitation || invitation.tenantId !== tenantId) {
+    throw new AppError(status.NOT_FOUND, "Invitation not found");
+  }
+
+  if (invitation.status === "ACCEPTED") {
+    throw new AppError(
+      status.CONFLICT,
+      "Cannot revoke an already-accepted invitation",
+    );
+  }
+
+  await prisma.invitation.delete({ where: { id } });
+  return null;
+};
 export const AuthService = {
   registerTenantOwner,
+  loginUser,
+  refreshAccessToken,
   resolvePasswordChange,
   forgetPassword,
   resetPassword,
   inviteUser,
-    acceptInvite,
+  acceptInvite,
+  getAllInvitations,
+  revokeInvitation,
 };

@@ -39,7 +39,9 @@ const resetPassword = catchAsync(async (req, res) => {
     });
 });
 const inviteUser = catchAsync(async (req, res) => {
-    const result = await AuthService.inviteUser(req.body);
+    const payload = req.body;
+    payload.tenantId = req.user.tenantId;
+    const result = await AuthService.inviteUser(payload, req.user.role, req.user.branchId);
     sendResponse(res, {
         httpStatusCode: status.CREATED,
         success: true,
@@ -56,11 +58,57 @@ const acceptInvite = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const login = catchAsync(async (req, res) => {
+    const result = await AuthService.loginUser(req.body);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Logged in successfully",
+        data: result,
+    });
+});
+const refreshToken = catchAsync(async (req, res) => {
+    const { refreshToken } = req.body;
+    const result = await AuthService.refreshAccessToken(refreshToken);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Token refreshed successfully",
+        data: result,
+    });
+});
+const getAllInvitations = catchAsync(async (req, res) => {
+    const tenantId = req.user.tenantId;
+    const branchId = req.user.role === "CENTER_ADMIN" ? req.user.branchId : undefined;
+    const result = await AuthService.getAllInvitations(req.query, tenantId, branchId);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Invitations fetched successfully",
+        data: result.data,
+        meta: result.meta,
+    });
+});
+const revokeInvitation = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const tenantId = req.user.tenantId;
+    await AuthService.revokeInvitation(id, tenantId);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Invitation revoked successfully",
+        data: null,
+    });
+});
 export const AuthController = {
     registerTenantOwner,
+    login,
+    refreshToken,
     resolvePasswordChange,
     forgetPassword,
     resetPassword,
     inviteUser,
     acceptInvite,
+    getAllInvitations,
+    revokeInvitation,
 };

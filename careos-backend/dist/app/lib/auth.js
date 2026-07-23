@@ -63,15 +63,25 @@ export const auth = betterAuth({
                 if (type === "email-verification") {
                     if (user && user.role === "SUPER_ADMIN")
                         return;
-                    await sendTemplatedEmail(email, "Verify your CareOS Email", "otp", {
-                        name,
-                        otp,
+                    await sendTemplatedEmail({
+                        to: email,
+                        subject: "Verify your CareOS Email",
+                        templateName: "otp",
+                        templateData: {
+                            name,
+                            otp,
+                        },
                     });
                 }
                 else if (type === "forget-password") {
-                    await sendTemplatedEmail(email, "CareOS Password Reset Code", "otp", {
-                        name,
-                        otp,
+                    await sendTemplatedEmail({
+                        to: email,
+                        subject: "CareOS Password Reset Code",
+                        templateName: "otp",
+                        templateData: {
+                            name,
+                            otp,
+                        },
                     });
                 }
             },

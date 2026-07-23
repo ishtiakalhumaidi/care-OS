@@ -7,13 +7,11 @@ import { IQuery } from "../../interfaces/query.interface.js";
 
 const createBranch = catchAsync(async (req: Request, res: Response) => {
   const payload = req.body;
-
-  if (req.user!.role !== "SUPER_ADMIN") {
-    payload.tenantId = req.user!.tenantId;
-  }
+  // Trust boundary secured: Inject server-side context directly
+  payload.tenantId = req.user!.tenantId; 
 
   const result = await BranchService.createBranch(payload);
-
+  
   sendResponse(res, {
     httpStatusCode: status.CREATED,
     success: true,
@@ -23,11 +21,9 @@ const createBranch = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllBranches = catchAsync(async (req: Request, res: Response) => {
-  const query = req.query;
-  const tenantId =
-    req.user!.role === "SUPER_ADMIN" ? undefined : req.user!.tenantId;
-  const result = await BranchService.getAllBranches(query as IQuery, tenantId as string);
-
+  const tenantId = req.user!.tenantId;
+  const result = await BranchService.getAllBranches(req.query as IQuery, tenantId as string);
+  
   sendResponse(res, {
     httpStatusCode: status.OK,
     success: true,
@@ -39,10 +35,9 @@ const getAllBranches = catchAsync(async (req: Request, res: Response) => {
 
 const getBranchById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const tenantId =
-    req.user!.role === "SUPER_ADMIN" ? undefined : req.user!.tenantId;
+  const tenantId = req.user!.tenantId;
   const result = await BranchService.getBranchById(id as string, tenantId as string);
-
+  
   sendResponse(res, {
     httpStatusCode: status.OK,
     success: true,
@@ -54,14 +49,9 @@ const getBranchById = catchAsync(async (req: Request, res: Response) => {
 const updateBranch = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const payload = req.body;
-  const tenantId =
-    req.user!.role === "SUPER_ADMIN" ? undefined : req.user!.tenantId;
-  const result = await BranchService.updateBranch(
-    id as string,
-    payload,
-    tenantId as string,
-  );
-
+  const tenantId = req.user!.tenantId;
+  const result = await BranchService.updateBranch(id as string, payload, tenantId as string);
+  
   sendResponse(res, {
     httpStatusCode: status.OK,
     success: true,
@@ -72,10 +62,9 @@ const updateBranch = catchAsync(async (req: Request, res: Response) => {
 
 const deleteBranch = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const tenantId =
-    req.user!.role === "SUPER_ADMIN" ? undefined : req.user!.tenantId;
+  const tenantId = req.user!.tenantId;
   const result = await BranchService.deleteBranch(id as string, tenantId as string);
-
+  
   sendResponse(res, {
     httpStatusCode: status.OK,
     success: true,

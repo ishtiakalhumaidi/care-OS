@@ -3,16 +3,16 @@ model Invoice {
   amount          Float
   dueDate         DateTime
   status          InvoiceStatus @default(UNPAID)
-  billingPeriodId String        // e.g., "WEEK_32_2026"
+  billingPeriodId String // e.g., "WEEK_32_2026"
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   // The child this tuition belongs to
-  childId         String
-  child           Child         @relation(fields: [childId], references: [id], onDelete: Cascade)
+  childId String
+  child   Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
 
   // Explicitly link the split transaction payment
-  payments        Payment[]
+  payments Payment[]
 }
 
 model Payment {
@@ -24,9 +24,9 @@ model Payment {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  invoiceId     String
-  invoice       Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   // Payer
-  payerId       String        // User ID of the paying parent
+  payerId String // User ID of the paying parent
 }

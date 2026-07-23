@@ -1,17 +1,20 @@
 model ChildGuardian {
-  id                String       @id @default(uuid())
-  childId           String
-  child             Child        @relation(fields: [childId], references: [id], onDelete: Cascade)
-  
-  userId            String
-  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  relationship      String       // e.g., "Mother", "Grandfather"
-  isPrimary         Boolean      @default(false)
-  canPickup         Boolean      @default(true)
-  
+  id      String @id @default(uuid())
+  childId String
+  child   Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  relationship String
+  isPrimary    Boolean @default(false)
+  canPickup    Boolean @default(true)
+
   billingPreference BillingCycle @default(WEEKLY)
-  splitPercentage   Int          @default(100) 
+  splitPercentage   Int          @default(100)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([childId, userId])
 }

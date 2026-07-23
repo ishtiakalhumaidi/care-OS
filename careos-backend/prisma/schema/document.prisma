@@ -1,19 +1,19 @@
 model Document {
-  id         String         @id @default(uuid())
-  type       DocumentType
-  status     DocumentStatus @default(PENDING_SIGNATURE)
-  fileUrl    String
-  version    Int            @default(1)
-  signedAt   DateTime?
-  expiresAt  DateTime?
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+  id        String         @id @default(uuid())
+  type      DocumentType
+  status    DocumentStatus @default(PENDING_SIGNATURE)
+  fileUrl   String
+  version   Int            @default(1)
+  signedAt  DateTime?
+  expiresAt DateTime?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
-  childId    String
-  child      Child          @relation(fields: [childId], references: [id], onDelete: Cascade)
+  childId String
+  child   Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
 
   signedById String?
-  signedBy   User?          @relation(fields: [signedById], references: [id])
+  signedBy   User?   @relation(fields: [signedById], references: [id])
 
   @@index([childId, type])
 }

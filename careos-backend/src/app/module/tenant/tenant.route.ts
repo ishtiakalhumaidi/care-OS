@@ -4,15 +4,10 @@ import { TenantController } from "./tenant.controller.js";
 import { TenantValidation } from "./tenant.validation.js";
 import { checkAuth } from "../../middleware/checkAuth.js";
 import { Role } from "../../../generated/prisma/client.js";
+import { multerUpload } from "../../config/multer.config.js";
 
 const router = Router();
 
-router.post(
-  "/",
-  checkAuth(Role.SUPER_ADMIN),
-  validateRequest(TenantValidation.createTenantZodSchema),
-  TenantController.createTenant,
-);
 
 router.get("/", checkAuth(Role.SUPER_ADMIN), TenantController.getAllTenants);
 
@@ -25,14 +20,28 @@ router.get(
 router.patch(
   "/:id",
   checkAuth(Role.SUPER_ADMIN, Role.TENANT_OWNER),
+  multerUpload.single("logo"),
   validateRequest(TenantValidation.updateTenantZodSchema),
   TenantController.updateTenant,
 );
 
-router.delete(
-  "/:id",
+router.patch(
+  "/:id/suspend",
   checkAuth(Role.SUPER_ADMIN),
-  TenantController.deleteTenant,
+  validateRequest(TenantValidation.suspendTenantZodSchema),
+  TenantController.suspendTenant,
+);
+
+router.patch(
+  "/:id/activate",
+  checkAuth(Role.SUPER_ADMIN),
+  TenantController.activateTenant,
+);
+
+router.get(
+  "/:id/analytics",
+  checkAuth(Role.SUPER_ADMIN),
+  TenantController.getTenantAnalytics,
 );
 
 export const TenantRoutes = router;

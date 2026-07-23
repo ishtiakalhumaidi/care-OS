@@ -1,20 +1,23 @@
 model Invitation {
-  id             String       @id @default(uuid())
-  email          String
-  role           Role
-  token          String       @unique
-  status         InviteStatus @default(PENDING)
-  expiresAt      DateTime
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id        String       @id @default(uuid())
+  email     String
+  role      Role
+  token     String       @unique
+  status    InviteStatus @default(PENDING)
+  expiresAt DateTime
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
-  tenantId       String
-  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  branchId       String?
-  classroomId    String?
+  tenantId    String
+  tenant      Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branchId    String?
+  classroomId String?
 
-  acceptedUserId String?      @unique
-  acceptedUser   User?        @relation(fields: [acceptedUserId], references: [id])
+  childId      String?
+  relationship String?
+
+  acceptedUserId String? @unique
+  acceptedUser   User?   @relation(fields: [acceptedUserId], references: [id])
 
   @@index([token])
   @@index([email])

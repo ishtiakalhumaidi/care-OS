@@ -10,7 +10,6 @@ const createBranch = async (payload) => {
     if (!isTenantExist) {
         throw new AppError(status.NOT_FOUND, "Tenant not found");
     }
-    // Enforce the subscription's branch cap so an owner can't silently outgrow their plan
     if (isTenantExist.planId) {
         const plan = await prisma.subscriptionPlan.findUnique({
             where: { id: isTenantExist.planId },
@@ -30,7 +29,9 @@ const createBranch = async (payload) => {
     return branch;
 };
 const getAllBranches = async (query, tenantId) => {
-    const scopedQuery = tenantId ? { ...query, tenantId } : query;
+    const scopedQuery = tenantId
+        ? { ...query, tenantId, isActive: true }
+        : { ...query, isActive: true };
     const queryBuilder = new QueryBuilder(prisma.branch, scopedQuery, {
         searchableFields: branchSearchableFields,
         filterableFields: branchFilterableFields,
@@ -50,7 +51,7 @@ const getBranchById = async (id, tenantId) => {
         where: { id },
         include: branchIncludeConfig,
     });
-    if (!branch) {
+    if (!branch || !branch.isActive) {
         throw new AppError(status.NOT_FOUND, "Branch not found");
     }
     if (tenantId && branch.tenantId !== tenantId) {
@@ -60,7 +61,7 @@ const getBranchById = async (id, tenantId) => {
 };
 const updateBranch = async (id, payload, tenantId) => {
     const isBranchExist = await prisma.branch.findUnique({ where: { id } });
-    if (!isBranchExist) {
+    if (!isBranchExist || !isBranchExist.isActive) {
         throw new AppError(status.NOT_FOUND, "Branch not found");
     }
     if (tenantId && isBranchExist.tenantId !== tenantId) {
@@ -74,14 +75,17 @@ const updateBranch = async (id, payload, tenantId) => {
 };
 const deleteBranch = async (id, tenantId) => {
     const isBranchExist = await prisma.branch.findUnique({ where: { id } });
-    if (!isBranchExist) {
+    if (!isBranchExist || !isBranchExist.isActive) {
         throw new AppError(status.NOT_FOUND, "Branch not found");
     }
     if (tenantId && isBranchExist.tenantId !== tenantId) {
         throw new AppError(status.FORBIDDEN, "You do not have access to this branch");
     }
-    await prisma.branch.delete({ where: { id } });
-    return { message: "Branch deleted successfully" };
+    await prisma.branch.update({
+        where: { id },
+        data: { isActive: false },
+    });
+    return { message: "Branch deactivated successfully" };
 };
 export const BranchService = {
     createBranch,

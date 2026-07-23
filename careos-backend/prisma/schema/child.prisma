@@ -1,19 +1,30 @@
 model Child {
-  id             String           @id @default(uuid())
-  firstName      String
-  lastName       String
-  dateOfBirth    DateTime
-  medicalNotes   String?
-  allergies      String?
-  status         EnrollmentStatus @default(WAITLISTED)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  id               String           @id @default(uuid())
+  childCode        String           @unique
+  firstName        String
+  lastName         String
+  dateOfBirth      DateTime
+  photoUrl         String?
+  medicalNotes     String?
+  allergies        String?
+  status           EnrollmentStatus @default(APPLIED)
+  rejectionReason  String?
+  suspensionReason String?
+  approvedAt       DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
-  branchId       String
-  branch         Branch           @relation(fields: [branchId], references: [id])
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  classroomId    String?
-  classroom      Classroom?       @relation(fields: [classroomId], references: [id])
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  classroomId String?
+  classroom   Classroom? @relation(fields: [classroomId], references: [id])
+
+  approvedById String?
+  approvedBy   User?   @relation("ChildApprovedBy", fields: [approvedById], references: [id])
 
   guardians      ChildGuardian[]
   attendance     Attendance[]
@@ -22,4 +33,15 @@ model Child {
   media          Media[]
   documents      Document[]
   conversations  Conversation[]
+
+  @@index([tenantId, status])
+}
+
+model ChildCodeSequence {
+  id         String @id @default(uuid())
+  tenantId   String
+  yearMonth  String
+  lastSerial Int    @default(0)
+
+  @@unique([tenantId, yearMonth])
 }

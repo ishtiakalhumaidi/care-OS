@@ -3,5 +3,11 @@ export const tenantFilterableFields = ["isActive", "planId"];
 export const tenantIncludeConfig = {
     plan: true,
     branches: true,
-    users: true,
+    _count: {
+        select: {
+            branches: true,
+            users: true,
+            invitations: true,
+        },
+    },
 };

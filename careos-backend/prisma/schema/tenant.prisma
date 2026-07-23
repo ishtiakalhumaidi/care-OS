@@ -1,29 +1,49 @@
 model Tenant {
-  id               String       @id @default(uuid())
+  id               String    @id @default(uuid())
   name             String
-  isActive         Boolean      @default(true)
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  slug             String    @unique
+  logoUrl          String?
+  isActive         Boolean   @default(true)
+  suspendedAt      DateTime?
+  suspensionReason String?
 
-  // Subscription Billing Link
+  contactEmail String?
+  contactPhone String?
+  website      String?
+
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  postalCode   String?
+  country      String?
+
+  timezone String  @default("UTC")
+  currency String  @default("USD")
+  taxId    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   planId           String?
   plan             SubscriptionPlan? @relation(fields: [planId], references: [id])
-  stripeCustomerId String?      @unique
+  stripeCustomerId String?           @unique
 
-  branches         Branch[]
-  users            User[]
-  invitations      Invitation[]
-  broadcasts       Broadcast[]
+  branches    Branch[]
+  users       User[]
+  invitations Invitation[]
+  broadcasts  Broadcast[]
+  children    Child[]
 }
 
 model SubscriptionPlan {
   id          String   @id @default(uuid())
-  name        String   @unique // e.g., "Startup", "Enterprise"
+  name        String   @unique 
   price       Float
-  maxStudents Int      // Used for system validation when enrolling kids
+  maxStudents Int 
   maxBranches Int      @default(1)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tenants     Tenant[]
+  tenants Tenant[]
 }

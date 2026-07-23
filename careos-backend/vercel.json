@@ -1,6 +1,14 @@
 {
-     "version": 2,
-     "buildCommand": "pnpm build",
-     "builds": [{"src": "dist/server.js", "use": "@vercel/node"}],
-     "routes": [{"src": "(.*)", "dest": "dist/server.js"}]
-   }
+  "version": 2,
+  "buildCommand": "pnpm build",
+  "builds": [
+    {
+      "src": "dist/server.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": "dist/app/templates/**"
+      }
+    }
+  ],
+  "routes": [{ "src": "(.*)", "dest": "dist/server.js" }]
+}

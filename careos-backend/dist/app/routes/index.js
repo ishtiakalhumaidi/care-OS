@@ -1,5 +1,15 @@
 import { Router } from "express";
-// import { authRouter } from "../module/auth/auth.route.js";
+import { AuthRoutes } from "../module/auth/auth.route.js";
+import { TenantRoutes } from "../module/tenant/tenant.route.js";
+import { BranchRoutes } from "../module/branch/branch.route.js";
+import { ClassroomRoutes } from "../module/classroom/classroom.route.js";
+import { ChildRoutes } from "../module/child/child.route.js";
+import { UserRoutes } from "../module/user/user.route.js";
 const router = Router();
-// router.use("/auth", authRouter);
+router.use("/auth", AuthRoutes);
+router.use("/users", UserRoutes);
+router.use("/tenants", TenantRoutes);
+router.use("/branches", BranchRoutes);
+router.use("/classrooms", ClassroomRoutes);
+router.use("/children", ChildRoutes);
 export const IndexRoutes = router;

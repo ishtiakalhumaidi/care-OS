@@ -1,13 +1,16 @@
 model Classroom {
-  id            String    @id @default(uuid())
+  id            String @id @default(uuid())
   name          String
   ageGroup      String
   legalCapacity Int
-  ratioLimit    Int       // e.g., 4 (meaning 1 Teacher : 4 Children)
+  ratioLimit    Int 
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  branchId      String
-  branch        Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
-  children      Child[]
-  shifts        Shift[]
+  children Child[]
+  shifts   Shift[]
+  users    User[]
 }
