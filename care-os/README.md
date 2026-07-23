@@ -28,7 +28,7 @@ The Next.js frontend for [CareOS](../README.md). Currently in early-access phase
 ## Getting Started
 
 ```bash
-git clone https://github.com/yourusername/careos.git
+git clone [https://github.com/ishtiakalhumaidi/care-OS.git](https://github.com/ishtiakalhumaidi/care-OS.git)
 cd careos/careos-client
 pnpm install
 pnpm dev
