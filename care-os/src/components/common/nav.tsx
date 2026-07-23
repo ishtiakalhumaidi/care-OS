@@ -1,11 +1,17 @@
-import { Logo } from "@/components/common/logo";
-import { ModeToggle } from "@/components/ui/theme-toggle";
+import { cookies } from "next/headers";
+import { jwtUtils } from "@/lib/jwtUtils";
+import { getDefaultDashboardRoute } from "@/lib/authUtils";
+import { NavClient } from "./NavClient";
 
-export function Nav() {
-  return (
-    <header className="relative z-20 flex items-center justify-between px-6 py-5 sm:px-10">
-      <Logo />
-      <ModeToggle />
-    </header>
-  );
+export async function Nav() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("accessToken")?.value;
+
+  const decodedToken = token ? jwtUtils.decodeEdgeSafe(token) : null;
+  const role = decodedToken?.role as string | null;
+
+  const isLoggedIn = !!role;
+  const dashboardRoute = getDefaultDashboardRoute(role);
+
+  return <NavClient isLoggedIn={isLoggedIn} dashboardRoute={dashboardRoute} />;
 }
