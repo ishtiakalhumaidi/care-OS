@@ -37,6 +37,10 @@ Each app is run independently — see its own README for setup:
 - [`careos-client/README.md`](./care-os/README.md)
 - [`careos-backend/README.md`](./careos-backend/README.md)
 
+## Contributing
+
+Want to contribute? Please read our [Contributing Guide](./CONTRIBUTING.md) before you start.
+
 ## License
 
 TBD

@@ -41,10 +41,10 @@ const applyForChild = catchAsync(async (req, res) => {
 });
 const getAllChildren = catchAsync(async (req, res) => {
     const tenantId = req.user.tenantId;
-    const branchId = req.user.role === "TENANT_OWNER"
-        ? undefined
-        : req.user.branchId;
-    const result = await ChildService.getAllChildren(req.query, tenantId, branchId);
+    const role = req.user.role;
+    const branchId = role === "TENANT_OWNER" ? undefined : req.user.branchId;
+    const classroomId = role === "TEACHER" ? req.user.classroomId : undefined;
+    const result = await ChildService.getAllChildren(req.query, tenantId, branchId, classroomId);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
@@ -56,10 +56,10 @@ const getAllChildren = catchAsync(async (req, res) => {
 const getChildById = catchAsync(async (req, res) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
-    const branchId = req.user.role === "TENANT_OWNER"
-        ? undefined
-        : req.user.branchId;
-    const result = await ChildService.getChildById(id, tenantId, branchId);
+    const role = req.user.role;
+    const branchId = role === "TENANT_OWNER" ? undefined : req.user.branchId;
+    const classroomId = role === "TEACHER" ? req.user.classroomId : undefined;
+    const result = await ChildService.getChildById(id, tenantId, branchId, classroomId);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,

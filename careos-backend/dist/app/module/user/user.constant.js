@@ -20,6 +20,7 @@ export const meIncludeConfig = {
                     photoUrl: true,
                     status: true,
                     rejectionReason: true,
+                    suspensionReason: true,
                     branch: { select: { id: true, name: true } },
                     classroom: { select: { id: true, name: true } },
                 },

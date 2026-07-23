@@ -33,11 +33,37 @@ const updateTenant = async (id, payload) => {
     if (!isTenantExist) {
         throw new AppError(status.NOT_FOUND, "Tenant not found");
     }
-    const updatedTenant = await prisma.tenant.update({
+    if (payload.slug) {
+        const slugTaken = await prisma.tenant.findFirst({
+            where: { slug: payload.slug, id: { not: id } },
+        });
+        if (slugTaken) {
+            throw new AppError(status.CONFLICT, "This slug is already taken");
+        }
+    }
+    if (payload.planId) {
+        const plan = await prisma.subscriptionPlan.findUnique({
+            where: { id: payload.planId },
+        });
+        if (!plan) {
+            throw new AppError(status.BAD_REQUEST, "Invalid plan selected");
+        }
+        const branchCount = await prisma.branch.count({ where: { tenantId: id } });
+        if (branchCount > plan.maxBranches) {
+            throw new AppError(status.CONFLICT, `This plan allows ${plan.maxBranches} branch(es); you currently have ${branchCount}. Remove branches first.`);
+        }
+        const enrolledCount = await prisma.child.count({
+            where: { tenantId: id, status: "ENROLLED" },
+        });
+        if (enrolledCount > plan.maxStudents) {
+            throw new AppError(status.CONFLICT, `This plan allows ${plan.maxStudents} student(s); you currently have ${enrolledCount} enrolled.`);
+        }
+    }
+    return prisma.tenant.update({
         where: { id },
         data: payload,
+        include: tenantIncludeConfig,
     });
-    return updatedTenant;
 };
 const suspendTenant = async (id, payload) => {
     const isTenantExist = await prisma.tenant.findUnique({ where: { id } });
@@ -94,7 +120,10 @@ const getTenantAnalytics = async (id) => {
     ]);
     return {
         tenant,
-        membersByRole: membersByRole.map((m) => ({ role: m.role, count: m._count._all })),
+        membersByRole: membersByRole.map((m) => ({
+            role: m.role,
+            count: m._count._all,
+        })),
         invitationsByStatus: invitationsByStatus.map((i) => ({
             status: i.status,
             count: i._count._all,

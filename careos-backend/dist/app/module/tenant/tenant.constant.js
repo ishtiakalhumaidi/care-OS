@@ -8,6 +8,7 @@ export const tenantIncludeConfig = {
             branches: true,
             users: true,
             invitations: true,
+            children: { where: { status: "ENROLLED" } },
         },
     },
 };

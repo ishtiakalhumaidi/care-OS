@@ -36,10 +36,12 @@ const applyForChild = async (payload, guardianId, tenantId, branchId) => {
     });
     return child;
 };
-const getAllChildren = async (query, tenantId, branchId) => {
-    const scopedQuery = branchId
-        ? { ...query, tenantId, branchId }
-        : { ...query, tenantId };
+const getAllChildren = async (query, tenantId, branchId, classroomId) => {
+    const scopedQuery = { ...query, tenantId };
+    if (branchId)
+        scopedQuery.branchId = branchId;
+    if (classroomId)
+        scopedQuery.classroomId = classroomId;
     const queryBuilder = new QueryBuilder(prisma.child, scopedQuery, {
         searchableFields: childSearchableFields,
         filterableFields: childFilterableFields,
@@ -54,7 +56,7 @@ const getAllChildren = async (query, tenantId, branchId) => {
         .execute();
     return result;
 };
-const getChildById = async (id, tenantId, branchId) => {
+const getChildById = async (id, tenantId, branchId, classroomId) => {
     const child = await prisma.child.findUnique({
         where: { id },
         include: childIncludeConfig,
@@ -63,6 +65,9 @@ const getChildById = async (id, tenantId, branchId) => {
         throw new AppError(status.NOT_FOUND, "Child not found");
     }
     if (branchId && child.branchId !== branchId) {
+        throw new AppError(status.FORBIDDEN, "You do not have access to this child");
+    }
+    if (classroomId && child.classroomId !== classroomId) {
         throw new AppError(status.FORBIDDEN, "You do not have access to this child");
     }
     return child;

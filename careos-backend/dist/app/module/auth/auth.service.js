@@ -8,6 +8,13 @@ import { randomBytes } from "crypto";
 import { sendTemplatedEmail } from "../../utils/emailSender.js";
 import { QueryBuilder } from "../../builder/QueryBuilder.js";
 import { ENUM_USER_ROLE, invitationFilterableFields, invitationSearchableFields, } from "./auth.constant.js";
+import { generateUniqueTenantSlug } from "../../utils/generateUniqueTenantSlug.js";
+const getDefaultFreePlanId = async () => {
+    const freePlan = await prisma.subscriptionPlan.findFirst({
+        where: { name: "Free" },
+    });
+    return freePlan?.id ?? null;
+};
 const registerTenantOwner = async (payload) => {
     const isUserExist = await prisma.user.findUnique({
         where: { email: payload.email },
@@ -15,10 +22,12 @@ const registerTenantOwner = async (payload) => {
     if (isUserExist) {
         throw new AppError(status.CONFLICT, "An account with this email already exists");
     }
+    const slug = await generateUniqueTenantSlug(payload.tenantName);
     const tenant = await prisma.tenant.create({
         data: {
             name: payload.tenantName,
-            planId: payload.planId,
+            slug,
+            planId: payload.planId ?? (await getDefaultFreePlanId()),
         },
     });
     try {

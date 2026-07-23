@@ -3,6 +3,7 @@ import { catchAsync } from "../../shared/catchAsync.js";
 import { sendResponse } from "../../shared/sendResponse.js";
 import { TenantService } from "./tenant.service.js";
 import AppError from "../../errorHelpers/AppError.js";
+import { uploadToCloudinary } from "../../config/cloudinary.config.js";
 const getAllTenants = catchAsync(async (req, res) => {
     const query = req.query;
     const result = await TenantService.getAllTenants(query);
@@ -32,7 +33,12 @@ const updateTenant = catchAsync(async (req, res) => {
     if (req.user.role === "TENANT_OWNER" && req.user.tenantId !== id) {
         throw new AppError(status.FORBIDDEN, "You do not have access to this tenant");
     }
-    const result = await TenantService.updateTenant(id, req.body);
+    const payload = req.body;
+    if (req.file) {
+        const result = await uploadToCloudinary(req.file.buffer, `tenants/${id}/logo`);
+        payload.logoUrl = result.secure_url;
+    }
+    const result = await TenantService.updateTenant(id, payload);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
