@@ -7,6 +7,7 @@ export interface IChildGuardianEntry {
   id: string;
   relationship: string;
   isPrimary: boolean;
+  canPickup: boolean;
   user: { id: string; name: string; email: string };
 }
 export interface ILinkGuardianPayload {
@@ -15,6 +16,8 @@ export interface ILinkGuardianPayload {
   isPrimary?: boolean;
   canPickup?: boolean;
 }
+
+
 export interface IChild {
   id: string;
   childCode: string;
@@ -23,6 +26,7 @@ export interface IChild {
   dateOfBirth: string;
   photoUrl?: string;
   medicalNotes?: string;
+  viewerLink?: IChildGuardianEntry;
   allergies?: string;
   status:
     | "APPLIED"
@@ -147,6 +151,62 @@ export const reactivateChild = async (id: string) => {
 export const unlinkGuardian = async (childId: string, linkId: string) => {
   try {
     const response = await serverApi.delete(`/children/${childId}/guardians/${linkId}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Failed to remove guardian");
+  }
+};
+
+export const getMyChildById = async (id: string) => {
+  try {
+    const response = await serverApi.get(`/children/mine/${id}`);
+    return response.data;
+  } catch (error: any) {
+    console.error("Backend Error:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "Failed to fetch child");
+  }
+};
+
+export const updatePickupPermission = async (
+  childId: string,
+  linkId: string,
+  payload: { canPickup: boolean },
+) => {
+  try {
+    const response = await serverApi.patch(
+      `/children/${childId}/guardians/${linkId}/pickup`,
+      payload,
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error("Backend Error:", error.response?.data || error.message);
+    throw new Error(
+      error.response?.data?.message || "Failed to update pickup permission",
+    );
+  }
+};
+
+export const selfLinkGuardian = async (
+  childId: string,
+  payload: { email: string; relationship: string; canPickup?: boolean },
+) => {
+  try {
+    const response = await serverApi.post(
+      `/children/${childId}/guardians/self`,
+      payload,
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error("Backend Error:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "Failed to add guardian");
+  }
+};
+
+export const selfUnlinkGuardian = async (childId: string, linkId: string) => {
+  try {
+    const response = await serverApi.delete(
+      `/children/${childId}/guardians/${linkId}/self`,
+    );
     return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || "Failed to remove guardian");

@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { IChild } from "@/services/child.services";
 import { CheckCircle2, Clock, XCircle, PauseCircle, Baby } from "lucide-react";
 
@@ -52,55 +53,62 @@ export default function ChildStatusCard({ child }: { child: IChild }) {
   const StatusIcon = config.icon;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-6">
-      <div className="flex items-center gap-4">
-        {child.photoUrl ? (
-          <Image
-            src={child.photoUrl}
-            alt={child.firstName}
-            width={64}
-            height={64}
-            className="size-16 rounded-full object-cover border border-border"
-          />
-        ) : (
-          <div className="flex size-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
-            <Baby className="size-7" />
+    <Link
+      href={`/guardian/dashboard/children/${child.id}`}
+      className="block rounded-lg border border-border bg-card p-6 transition-colors hover:border-primary/40"
+    >
+      <div className="rounded-lg border border-border bg-card p-6">
+        <div className="flex items-center gap-4">
+          {child.photoUrl ? (
+            <Image
+              src={child.photoUrl}
+              alt={child.firstName}
+              width={64}
+              height={64}
+              className="size-16 rounded-full object-cover border border-border"
+            />
+          ) : (
+            <div className="flex size-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <Baby className="size-7" />
+            </div>
+          )}
+
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-foreground">
+              {child.firstName} {child.lastName}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              ID: {child.childCode}
+            </p>
           </div>
-        )}
-
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-foreground">
-            {child.firstName} {child.lastName}
-          </h3>
-          <p className="text-sm text-muted-foreground">ID: {child.childCode}</p>
         </div>
-      </div>
 
-      <div
-        className={`mt-4 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium ${config.className}`}
-      >
-        <StatusIcon className="size-4 shrink-0" />
-        {config.label}
-      </div>
+        <div
+          className={`mt-4 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium ${config.className}`}
+        >
+          <StatusIcon className="size-4 shrink-0" />
+          {config.label}
+        </div>
 
-      {child.status === "REJECTED" && child.rejectionReason && (
-        <p className="mt-3 text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">Reason: </span>
-          {child.rejectionReason}
-        </p>
-      )}
-      {child.status === "SUSPENDED" && child.suspensionReason && (
-        <p className="mt-3 text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">Reason: </span>
-          {child.suspensionReason}
-        </p>
-      )}
-      {child.branch && (
-        <p className="mt-3 text-xs text-muted-foreground">
-          Branch: {child.branch.name}
-          {child.classroom && ` · Classroom: ${child.classroom.name}`}
-        </p>
-      )}
-    </div>
+        {child.status === "REJECTED" && child.rejectionReason && (
+          <p className="mt-3 text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">Reason: </span>
+            {child.rejectionReason}
+          </p>
+        )}
+        {child.status === "SUSPENDED" && child.suspensionReason && (
+          <p className="mt-3 text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">Reason: </span>
+            {child.suspensionReason}
+          </p>
+        )}
+        {child.branch && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Branch: {child.branch.name}
+            {child.classroom && ` · Classroom: ${child.classroom.name}`}
+          </p>
+        )}
+      </div>
+    </Link>
   );
 }
