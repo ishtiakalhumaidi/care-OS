@@ -90,6 +90,77 @@ const getChildById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getMyChildById = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const guardianId = req.user!.id;
+  const tenantId = req.user!.tenantId as string;
+
+  const result = await ChildService.getMyChildById(id as string, guardianId, tenantId);
+
+  sendResponse(res, {
+    httpStatusCode: status.OK,
+    success: true,
+    message: "Child fetched successfully",
+    data: result,
+  });
+});
+
+const updatePickupPermission = catchAsync(async (req: Request, res: Response) => {
+  const { id, linkId } = req.params;
+  const requesterId = req.user!.id;
+  const tenantId = req.user!.tenantId as string;
+
+  const result = await ChildService.updatePickupPermission(
+    id as string,
+    linkId as string,
+    requesterId,
+    tenantId,
+    req.body,
+  );
+
+  sendResponse(res, {
+    httpStatusCode: status.OK,
+    success: true,
+    message: "Pickup permission updated",
+    data: result,
+  });
+});
+
+const selfLinkGuardian = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const requesterId = req.user!.id;
+  const tenantId = req.user!.tenantId as string;
+
+  const result = await ChildService.selfLinkGuardian(
+    id as string,
+    requesterId,
+    tenantId,
+    req.body,
+  );
+
+  sendResponse(res, {
+    httpStatusCode: status.CREATED,
+    success: true,
+    message: "Guardian added successfully",
+    data: result,
+  });
+});
+
+const selfUnlinkGuardian = catchAsync(async (req: Request, res: Response) => {
+  const { id, linkId } = req.params;
+  const requesterId = req.user!.id;
+  const tenantId = req.user!.tenantId as string;
+
+  await ChildService.selfUnlinkGuardian(id as string, linkId as string, requesterId, tenantId);
+
+  sendResponse(res, {
+    httpStatusCode: status.OK,
+    success: true,
+    message: "Guardian removed",
+    data: null,
+  });
+});
+
 const approveChild = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const staffId = req.user!.id;
@@ -225,10 +296,14 @@ export const ChildController = {
   applyForChild,
   getAllChildren,
   getChildById,
+  getMyChildById,
   approveChild,
   rejectChild,
   linkGuardian,
+  selfLinkGuardian,
   suspendChild,
   reactivateChild,
   unlinkGuardian,
+  selfUnlinkGuardian,
+  updatePickupPermission,
 };

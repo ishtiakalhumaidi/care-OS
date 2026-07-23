@@ -69,4 +69,30 @@ router.delete(
   ChildController.unlinkGuardian,
 );
 
+router.get(
+  "/mine/:id",
+  checkAuth(Role.GUARDIAN),
+  ChildController.getMyChildById,
+);
+
+router.post(
+  "/:id/guardians/self",
+  checkAuth(Role.GUARDIAN),
+  validateRequest(ChildValidation.selfLinkGuardianZodSchema),
+  ChildController.selfLinkGuardian,
+);
+
+router.patch(
+  "/:id/guardians/:linkId/pickup",
+  checkAuth(Role.GUARDIAN),
+  validateRequest(ChildValidation.updatePickupZodSchema),
+  ChildController.updatePickupPermission,
+);
+
+router.delete(
+  "/:id/guardians/:linkId/self",
+  checkAuth(Role.GUARDIAN),
+  ChildController.selfUnlinkGuardian,
+);
+
 export const ChildRoutes = router;

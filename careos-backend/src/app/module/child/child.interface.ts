@@ -26,3 +26,13 @@ export interface ILinkGuardianPayload {
 export interface ISuspendChildPayload {
   reason: string;
 }
+
+export interface IUpdatePickupPayload {
+  canPickup: boolean;
+}
+
+export interface ISelfLinkGuardianPayload {
+  email: string;
+  relationship: string;
+  canPickup?: boolean;
+}

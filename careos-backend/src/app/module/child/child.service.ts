@@ -7,12 +7,14 @@ import {
   childIncludeConfig,
   childSearchableFields,
 } from "./child.constant.js";
-import {
+import type {
   IApplyForChildPayload,
   IApproveChildPayload,
   IRejectChildPayload,
-  type ILinkGuardianPayload,
-  type ISuspendChildPayload,
+  ILinkGuardianPayload,
+  ISuspendChildPayload,
+  IUpdatePickupPayload,
+  ISelfLinkGuardianPayload,
 } from "./child.interface.js";
 import type { Prisma, Child } from "../../../generated/prisma/client.js";
 import type { IQuery } from "../../interfaces/query.interface.js";
@@ -122,6 +124,176 @@ const getChildById = async (
   return child;
 };
 
+const getMyChildById = async (
+  childId: string,
+  guardianId: string,
+  tenantId: string,
+) => {
+  const child = await prisma.child.findUnique({
+    where: { id: childId },
+    include: childIncludeConfig as Prisma.ChildInclude,
+  });
+
+  if (!child || child.tenantId !== tenantId) {
+    throw new AppError(status.NOT_FOUND, "Child not found");
+  }
+
+  const viewerLink = (child as any).guardians?.find(
+    (g: any) => g.userId === guardianId,
+  );
+
+  if (!viewerLink) {
+    throw new AppError(
+      status.FORBIDDEN,
+      "You do not have access to this child",
+    );
+  }
+
+  return { ...child, viewerLink };
+};
+
+const updatePickupPermission = async (
+  childId: string,
+  linkId: string,
+  requesterId: string,
+  tenantId: string,
+  payload: IUpdatePickupPayload,
+) => {
+  const child = await prisma.child.findUnique({ where: { id: childId } });
+  if (!child || child.tenantId !== tenantId) {
+    throw new AppError(status.NOT_FOUND, "Child not found");
+  }
+
+  const requesterLink = await prisma.childGuardian.findUnique({
+    where: { childId_userId: { childId, userId: requesterId } },
+  });
+  if (!requesterLink) {
+    throw new AppError(
+      status.FORBIDDEN,
+      "You do not have access to this child",
+    );
+  }
+  if (!requesterLink.isPrimary) {
+    throw new AppError(
+      status.FORBIDDEN,
+      "Only the primary guardian can manage pickup permissions",
+    );
+  }
+
+  const targetLink = await prisma.childGuardian.findUnique({
+    where: { id: linkId },
+  });
+  if (!targetLink || targetLink.childId !== childId) {
+    throw new AppError(status.NOT_FOUND, "Guardian link not found");
+  }
+
+  return prisma.childGuardian.update({
+    where: { id: linkId },
+    data: { canPickup: payload.canPickup },
+  });
+};
+
+const selfLinkGuardian = async (
+  childId: string,
+  requesterId: string,
+  tenantId: string,
+  payload: ISelfLinkGuardianPayload,
+) => {
+  const child = await prisma.child.findUnique({ where: { id: childId } });
+  if (!child || child.tenantId !== tenantId) {
+    throw new AppError(status.NOT_FOUND, "Child not found");
+  }
+
+  const requesterLink = await prisma.childGuardian.findUnique({
+    where: { childId_userId: { childId, userId: requesterId } },
+  });
+  if (!requesterLink) {
+    throw new AppError(
+      status.FORBIDDEN,
+      "You do not have access to this child",
+    );
+  }
+  if (!requesterLink.isPrimary) {
+    throw new AppError(
+      status.FORBIDDEN,
+      "Only the primary guardian can add other guardians",
+    );
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: payload.email },
+  });
+  if (!user || user.tenantId !== tenantId || user.role !== "GUARDIAN") {
+    throw new AppError(
+      status.BAD_REQUEST,
+      "No guardian account found with that email. Ask them to register first.",
+    );
+  }
+
+  const existingLink = await prisma.childGuardian.findUnique({
+    where: { childId_userId: { childId, userId: user.id } },
+  });
+  if (existingLink) {
+    throw new AppError(
+      status.CONFLICT,
+      "This guardian is already linked to this child",
+    );
+  }
+
+  return prisma.childGuardian.create({
+    data: {
+      childId,
+      userId: user.id,
+      relationship: payload.relationship,
+      isPrimary: false,
+      canPickup: payload.canPickup ?? true,
+    },
+  });
+};
+
+const selfUnlinkGuardian = async (
+  childId: string,
+  linkId: string,
+  requesterId: string,
+  tenantId: string,
+) => {
+  const child = await prisma.child.findUnique({ where: { id: childId } });
+  if (!child || child.tenantId !== tenantId) {
+    throw new AppError(status.NOT_FOUND, "Child not found");
+  }
+
+  const requesterLink = await prisma.childGuardian.findUnique({
+    where: { childId_userId: { childId, userId: requesterId } },
+  });
+  if (!requesterLink) {
+    throw new AppError(
+      status.FORBIDDEN,
+      "You do not have access to this child",
+    );
+  }
+  if (!requesterLink.isPrimary) {
+    throw new AppError(
+      status.FORBIDDEN,
+      "Only the primary guardian can remove other guardians",
+    );
+  }
+
+  const targetLink = await prisma.childGuardian.findUnique({
+    where: { id: linkId },
+  });
+  if (!targetLink || targetLink.childId !== childId) {
+    throw new AppError(status.NOT_FOUND, "Guardian link not found");
+  }
+  if (targetLink.isPrimary) {
+    throw new AppError(
+      status.FORBIDDEN,
+      "The primary guardian cannot be removed. Contact staff.",
+    );
+  }
+
+  await prisma.childGuardian.delete({ where: { id: linkId } });
+  return null;
+};
 const assertReviewable = async (
   id: string,
   tenantId: string,
@@ -389,10 +561,14 @@ export const ChildService = {
   applyForChild,
   getAllChildren,
   getChildById,
+  getMyChildById,
   approveChild,
   rejectChild,
   linkGuardian,
+  selfLinkGuardian,
   suspendChild,
   reactivateChild,
   unlinkGuardian,
+  selfUnlinkGuardian,
+  updatePickupPermission,
 };
